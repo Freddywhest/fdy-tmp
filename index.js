@@ -148,7 +148,7 @@ class FdyTmp {
 
       // Read the file content and parse it as JSON
       const data = fs.readFileSync(filePath, "utf8");
-      this.json = JSON.parse(data);
+      this.json = JSON.parse(Buffer.from(data, "base64").toString("utf8"));
 
       // If no specific key is requested, return the entire JSON
       if (key === null) {
@@ -182,7 +182,7 @@ class FdyTmp {
 
     // Read the file content as text and return it
     const data = fs.readFileSync(filePath, "utf8");
-    this.content = data;
+    this.content = Buffer.from(data, "base64").toString("utf8");
     return this.content?.trim(); // Trim whitespace and return
   }
 
@@ -200,10 +200,13 @@ class FdyTmp {
       if (this.isJson) {
         fs.writeFileSync(
           `${filePath}/${this.fileName}`,
-          JSON.stringify(this.json) // Pretty print JSON with 2-space indentation
+          Buffer.from(JSON.stringify(this.json)).toString("base64") // Pretty print JSON with 2-space indentation
         );
       } else {
-        fs.writeFileSync(`${filePath}/${this.fileName}`, this.content); // Save plain text
+        fs.writeFileSync(
+          `${filePath}/${this.fileName}`,
+          Buffer.from(this.content).toString("base64")
+        ); // Save plain text
       }
 
       return true; // Return true if save is successful
