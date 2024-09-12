@@ -14,7 +14,9 @@ class FdyTmpError extends Error {
   }
 }
 
-// Main FdyTmp class for managing temporary files
+/**
+ * @class FdyTmp
+ * */
 class FdyTmp {
   static json = {}; // Stores JSON data to be saved or retrieved
   static content = ""; // Stores text content to be saved or retrieved
@@ -22,7 +24,12 @@ class FdyTmp {
   static tmpPath = "tmp"; // Default path for temporary files
   static fileName = "fdytmp.tmp"; // Default file name for the temporary file
 
-  // Configuration method to set tmpPath and fileName
+  /**
+   * @typedef {{ tmpPath?: string, fileName?: string }} Options
+   * Configuration options for FdyTmp
+   * @param {Options} options - Configuration options
+   * @returns {FdyTmp} - Returns an instance of FdyTmp
+   */
   static config(options = {}) {
     this.tmpPath = options.tmpPath || this.tmpPath; // Set custom or default tmpPath
     this.fileName = options.fileName || this.fileName; // Set custom or default fileName
@@ -38,19 +45,27 @@ class FdyTmp {
     return this; // Return the class for chaining
   }
 
-  // Adds or updates JSON data
+  /**
+   * @param {string|object|array} key
+   * @param {any} value
+   * @param {boolean} fresh
+   * @returns {FdyTmp} - Returns an instance of FdyTmp
+   */
   static addJson(key, value, fresh = false) {
     const prevJson = this.getJson(); // Retrieve existing JSON data
 
     // If key is an object and value is a boolean, replace the entire JSON
-    if (typeof key === "object" && typeof value === "boolean") {
+    if (
+      (typeof key === "object" || Array.isArray(key)) &&
+      typeof value === "boolean"
+    ) {
       this.isJson = true;
       this.json = key;
       return this;
     }
 
     // If key is an object, merge it with the existing JSON
-    if (typeof key === "object") {
+    if (typeof key === "object" || Array.isArray(key)) {
       this.isJson = true;
       this.json = prevJson ? { ...prevJson, ...key } : key;
       return this;
@@ -80,7 +95,12 @@ class FdyTmp {
     return this; // Return the class for chaining
   }
 
-  // Adds or updates text content
+  /**
+   * @param {string} content - Content to be added
+   * @param {boolean} fresh - Whether to overwrite the existing content
+   * @param {boolean} newLine - Whether to add a new line between the old and new content
+   * @returns {FdyTmp} - Returns an instance of FdyTmp
+   */
   static addContent(content, fresh = false, newLine = true) {
     const prevContent = this.getText(); // Retrieve existing content
 
@@ -108,7 +128,10 @@ class FdyTmp {
     return this; // Return the class for chaining
   }
 
-  // Retrieves JSON data from the file
+  /**
+   * @returns {?FdyTmp.json} - Returns an instance of FdyTmp
+   * @param {?string} key - Key to retrieve from the JSON
+   * */
   static getJson(key = null) {
     try {
       // Ensure fileName and tmpPath are set
@@ -205,7 +228,10 @@ class FdyTmp {
     }
   }
 
-  // Deletes a specific key from the JSON data
+  /**
+   * @returns {boolean} - Returns an instance of FdyTmp
+   * @param {?string} key - Key to retrieve from the JSON
+   * */
   static deleteJsonElement(key = null) {
     try {
       const prevJson = this.getJson(); // Retrieve existing JSON data
@@ -227,7 +253,10 @@ class FdyTmp {
     }
   }
 
-  // Checks if a specific key exists in the JSON data
+  /**
+   * @returns {boolean} - Returns an instance of FdyTmp
+   * @param {?string} key - Key to retrieve from the JSON
+   * */
   static hasJsonElement(key = null) {
     try {
       const prevJson = this.getJson(); // Retrieve existing JSON data
