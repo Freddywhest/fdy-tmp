@@ -193,7 +193,7 @@ class FdyTmp {
 
       // Create the directory if it doesn't exist
       if (!fs.existsSync(filePath)) {
-        fs.mkdirSync(filePath);
+        fs.mkdirSync(filePath, { recursive: true });
       }
 
       // Save the content as JSON if isJson flag is set, otherwise save as text
