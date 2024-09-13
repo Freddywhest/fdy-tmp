@@ -18,11 +18,11 @@ class FdyTmpError extends Error {
  * @class FdyTmp
  * */
 class FdyTmp {
-  static json = {}; // Stores JSON data to be saved or retrieved
-  static content = ""; // Stores text content to be saved or retrieved
-  static isJson = false; // Flag to indicate whether data is JSON
-  static tmpPath = "tmp"; // Default path for temporary files
-  static fileName = "fdytmp.tmp"; // Default file name for the temporary file
+  #json = {}; // Stores JSON data to be saved or retrieved
+  #content = ""; // Stores text content to be saved or retrieved
+  #isJson = false; // Flag to indicate whether data is JSON
+  #tmpPath = "tmp"; // Default path for temporary files
+  #fileName = "fdytmp.tmp"; // Default file name for the temporary file
 
   /**
    * @typedef {{ tmpPath?: string, fileName?: string }} Options
@@ -30,19 +30,17 @@ class FdyTmp {
    * @param {Options} options - Configuration options
    * @returns {FdyTmp} - Returns an instance of FdyTmp
    */
-  static config(options = {}) {
-    this.tmpPath = options.tmpPath || this.tmpPath; // Set custom or default tmpPath
-    this.fileName = options.fileName || this.fileName; // Set custom or default fileName
+  constructor(options = {}) {
+    this.#tmpPath = options.tmpPath || this.#tmpPath; // Set custom or default tmpPath
+    this.#fileName = options.fileName || this.#fileName; // Set custom or default fileName
 
-    if (!this.tmpPath) {
+    if (!this.#tmpPath) {
       throw new FdyTmpError("tmpPath is required"); // Throw an error if tmpPath is not provided
     }
 
-    if (!this.fileName) {
+    if (!this.#fileName) {
       throw new FdyTmpError("fileName is required"); // Throw an error if fileName is not provided
     }
-
-    return this; // Return the class for chaining
   }
 
   /**
@@ -51,7 +49,7 @@ class FdyTmp {
    * @param {boolean} fresh
    * @returns {FdyTmp} - Returns an instance of FdyTmp
    */
-  static addJson(key, value, fresh = false) {
+  addJson(key, value, fresh = false) {
     const prevJson = this.getJson(); // Retrieve existing JSON data
 
     // If key is an object and value is a boolean, replace the entire JSON
@@ -59,38 +57,38 @@ class FdyTmp {
       (typeof key === "object" || Array.isArray(key)) &&
       typeof value === "boolean"
     ) {
-      this.isJson = true;
-      this.json = key;
+      this.#isJson = true;
+      this.#json = key;
       return this;
     }
 
     // If key is an object, merge it with the existing JSON
     if (typeof key === "object" || Array.isArray(key)) {
-      this.isJson = true;
-      this.json = prevJson ? { ...prevJson, ...key } : key;
+      this.#isJson = true;
+      this.#json = prevJson ? { ...prevJson, ...key } : key;
       return this;
     }
 
     // If fresh is true, overwrite the existing JSON with a new object
     if (fresh) {
-      this.isJson = true;
-      this.json = {};
-      this.json[key] = value;
+      this.#isJson = true;
+      this.#json = {};
+      this.#json[key] = value;
       return this;
     }
 
     // If there is no previous JSON, create a new object
     if (prevJson === null) {
-      this.isJson = true;
-      this.json = {};
-      this.json[key] = value;
+      this.#isJson = true;
+      this.#json = {};
+      this.#json[key] = value;
       return this;
     }
 
     // Otherwise, update the existing JSON
-    this.isJson = true;
+    this.#isJson = true;
     prevJson[key] = value;
-    this.json = prevJson;
+    this.#json = prevJson;
 
     return this; // Return the class for chaining
   }
@@ -101,27 +99,27 @@ class FdyTmp {
    * @param {boolean} newLine - Whether to add a new line between the old and new content
    * @returns {FdyTmp} - Returns an instance of FdyTmp
    */
-  static addContent(content, fresh = false, newLine = true) {
+  addContent(content, fresh = false, newLine = true) {
     const prevContent = this.getText(); // Retrieve existing content
 
     // If fresh is true, overwrite the existing content
     if (fresh) {
-      this.isJson = false;
-      this.content = "";
-      this.content = content;
+      this.#isJson = false;
+      this.#content = "";
+      this.#content = content;
       return this;
     }
 
     // If no previous content exists, set the content
     if (prevContent === null) {
-      this.isJson = false;
-      this.content = content;
+      this.#isJson = false;
+      this.#content = content;
       return this;
     }
 
     // Otherwise, append new content to the existing content
-    this.isJson = false;
-    this.content = newLine
+    this.#isJson = false;
+    this.#content = newLine
       ? `${prevContent}\n${content}` // Add new line between old and new content
       : `${prevContent}${content}`; // Concatenate without new line
 
@@ -132,14 +130,14 @@ class FdyTmp {
    * @returns {?FdyTmp.json} - Returns an instance of FdyTmp
    * @param {?string} key - Key to retrieve from the JSON
    * */
-  static getJson(key = null) {
+  getJson(key = null) {
     try {
       // Ensure fileName and tmpPath are set
-      if (!this.fileName || !this.tmpPath) {
+      if (!this.#fileName || !this.#tmpPath) {
         throw new FdyTmpError("fileName and tmpPath are required");
       }
 
-      const filePath = path.join(this.tmpPath, this.fileName); // Construct the file path
+      const filePath = path.join(this.#tmpPath, this.#fileName); // Construct the file path
 
       // If file does not exist, return null
       if (!fs.existsSync(filePath)) {
@@ -148,32 +146,32 @@ class FdyTmp {
 
       // Read the file content and parse it as JSON
       const data = fs.readFileSync(filePath, "utf8");
-      this.json = JSON.parse(Buffer.from(data, "base64").toString("utf8"));
+      this.#json = JSON.parse(Buffer.from(data, "base64").toString("utf8"));
 
       // If no specific key is requested, return the entire JSON
       if (key === null) {
-        return this.json;
+        return this.#json;
       }
 
       // Return the specific key's value if it exists
-      if (!this.json[key]) {
+      if (!this.#json[key]) {
         return null;
       }
 
-      return this.json[key];
+      return this.#json[key];
     } catch (error) {
       throw new FdyTmpError("Error reading json: " + error); // Handle any errors during reading
     }
   }
 
   // Retrieves text content from the file
-  static getText() {
+  getText() {
     // Ensure fileName and tmpPath are set
-    if (!this.fileName || !this.tmpPath) {
+    if (!this.#fileName || !this.#tmpPath) {
       throw new FdyTmpError("fileName and tmpPath are required");
     }
 
-    const filePath = path.join(this.tmpPath, this.fileName); // Construct the file path
+    const filePath = path.join(this.#tmpPath, this.#fileName); // Construct the file path
 
     // If file does not exist, return null
     if (!fs.existsSync(filePath)) {
@@ -182,14 +180,14 @@ class FdyTmp {
 
     // Read the file content as text and return it
     const data = fs.readFileSync(filePath, "utf8");
-    this.content = Buffer.from(data, "base64").toString("utf8");
-    return this.content?.trim(); // Trim whitespace and return
+    this.#content = Buffer.from(data, "base64").toString("utf8");
+    return this.#content?.trim(); // Trim whitespace and return
   }
 
   // Saves either JSON or text content to the file
-  static save() {
+  save() {
     try {
-      const filePath = path.join(this.tmpPath); // Construct the directory path
+      const filePath = path.join(this.#tmpPath); // Construct the directory path
 
       // Create the directory if it doesn't exist
       if (!fs.existsSync(filePath)) {
@@ -197,15 +195,15 @@ class FdyTmp {
       }
 
       // Save the content as JSON if isJson flag is set, otherwise save as text
-      if (this.isJson) {
+      if (this.#isJson) {
         fs.writeFileSync(
-          `${filePath}/${this.fileName}`,
-          Buffer.from(JSON.stringify(this.json)).toString("base64") // Pretty print JSON with 2-space indentation
+          `${filePath}/${this.#fileName}`,
+          Buffer.from(JSON.stringify(this.#json)).toString("base64") // Pretty print JSON with 2-space indentation
         );
       } else {
         fs.writeFileSync(
-          `${filePath}/${this.fileName}`,
-          Buffer.from(this.content).toString("base64")
+          `${filePath}/${this.#fileName}`,
+          Buffer.from(this.#content).toString("base64")
         ); // Save plain text
       }
 
@@ -216,9 +214,9 @@ class FdyTmp {
   }
 
   // Deletes the temporary file
-  static clear() {
+  clear() {
     try {
-      const filePath = path.join(this.tmpPath, this.fileName); // Construct the file path
+      const filePath = path.join(this.#tmpPath, this.#fileName); // Construct the file path
 
       // If the file exists, delete it
       if (fs.existsSync(filePath)) {
@@ -235,7 +233,7 @@ class FdyTmp {
    * @returns {boolean} - Returns an instance of FdyTmp
    * @param {?string} key - Key to retrieve from the JSON
    * */
-  static deleteJsonElement(key = null) {
+  deleteJsonElement(key = null) {
     try {
       const prevJson = this.getJson(); // Retrieve existing JSON data
 
@@ -246,8 +244,8 @@ class FdyTmp {
 
       // Delete the specific key from the JSON
       delete prevJson[key];
-      this.json = prevJson;
-      this.isJson = true;
+      this.#json = prevJson;
+      this.#isJson = true;
       this.save(); // Save the updated JSON
 
       return true; // Return true if deletion is successful
@@ -260,7 +258,7 @@ class FdyTmp {
    * @returns {boolean} - Returns an instance of FdyTmp
    * @param {?string} key - Key to retrieve from the JSON
    * */
-  static hasJsonElement(key = null) {
+  hasJsonElement(key = null) {
     try {
       const prevJson = this.getJson(); // Retrieve existing JSON data
 
